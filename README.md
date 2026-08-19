@@ -2,9 +2,31 @@
 
 An interactive visual database for browsing, rating, and extracting prompts from AI-generated visual styles.
 
+## Pages
+
+### Gallery
+
 <p align="center">
-  <img src="images/Krea 2 Turbo - Style Explorer.webp" alt="Visual Prompt Explorer Interface Preview" width="800">
+  <img src="images/gallery.png" alt="Gallery — browse and rate 1,500+ visual styles" width="800">
 </p>
+
+Browse, search, filter, and rate styles. Click any card to copy its prompt or open the full viewer.
+
+### Prompt Builder
+
+<p align="center">
+  <img src="images/prompt_builder.png" alt="Prompt Builder — assemble prompts from subjects and style presets" width="800">
+</p>
+
+Generate complete text-to-image prompts. Quick Build mode for rapid iteration, Detailed mode for fine control over weights and seeds.
+
+### Admin
+
+<p align="center">
+  <img src="images/admin.png" alt="Admin — configure Supabase, AI provider, and display settings" width="800">
+</p>
+
+Configure Supabase sync, local LLM provider, display preferences, and manage favorites import/export.
 
 ## Features
 
