@@ -8,7 +8,7 @@ window.appSupabase = (function () {
     let SUPABASE_URL = '';
     let SUPABASE_ANON_KEY = '';
 
-    // OMLX (LLM provider) — configure via Admin page
+    // Local LLM provider (Ollama, LM Studio, etc.) — configure via Admin page
     const LOCAL_OMLX_URL = '';
 
     // No cloud Supabase - everything runs locally

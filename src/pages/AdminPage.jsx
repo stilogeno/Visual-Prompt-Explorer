@@ -231,7 +231,7 @@ export default function AdminPage() {
         <h2>AI / LLM Provider</h2>
         <p class="section-desc">Configure the local OpenAI-compatible LLM used by the Prompt Builder.</p>
 
-        <SettingRow title="Provider Base URL" hint="OpenAI-compatible endpoint (e.g. OMLX, Ollama, LM Studio)">
+        <SettingRow title="Provider Base URL" hint="OpenAI-compatible endpoint (e.g. Ollama, LM Studio, vLLM)">
           <input type="text" class="text-input" placeholder="http://your-llm-host:8000/v1"
             value={settings.aiBaseUrl} onInput={(e) => update('aiBaseUrl', e.target.value)} />
         </SettingRow>

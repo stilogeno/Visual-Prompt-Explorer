@@ -98,15 +98,15 @@ Weighted terms render as `(term:weight)` in the prompt output.
 | Copy All Prompts | Every generated prompt as a formatted block |
 | Export as JSON | Downloads all prompts as a JSON file |
 
-## AI Features (Local OMLX)
+## AI Features (Local LLM)
 
-The builder can optionally use a local OpenAI-compatible LLM (configured in Admin settings) for:
+The builder can optionally use a local OpenAI-compatible LLM (Ollama, LM Studio, vLLM, etc.) configured in Admin settings for:
 
 - **AI Suggest** — semantic search over all 1,596 library prompts using precomputed vectors
 - **AI Enhance** — LLM rewrites your topic into a vivid prompt
 - **Generate New Style** — LLM invents a new style prompt
 
-All fall back gracefully to lexical matching if OMLX is unreachable.
+All fall back gracefully to lexical matching if the local LLM is unreachable.
 
 ## Keyboard Shortcuts
 

@@ -12,14 +12,14 @@ This project uses a **local** Supabase implementation. No cloud dependencies. Ev
 |-----------|----------|-------------|
 | **Supabase** | Your machine | `npx supabase start` |
 | **Nginx** (optional) | Same machine or NAS | Serves static pages + proxies API |
-| **OMLX** (optional) | Same machine or NAS | Local OpenAI-compatible LLM |
+| **Local LLM** (optional) | Same machine | OpenAI-compatible (Ollama, LM Studio, etc.) |
 
 ### Network Flow
 
 ```
 Browser → Static pages (Nginx or dev server)
          → Supabase (npx supabase start)
-         → OMLX (optional, for AI features)
+         → Local LLM (optional, for AI features)
 ```
 
 The browser loads pages, then connects to your local Supabase instance.
