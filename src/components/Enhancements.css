@@ -1,0 +1,145 @@
+.kx-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20000;
+}
+
+.kx-modal-inner {
+  background: var(--card-background, #1e1e2e);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 14px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 20px;
+  position: relative;
+}
+
+.kx-modal h3 {
+  margin: 0 0 12px;
+}
+
+.kx-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  background: var(--card-background, #1e1e2e);
+  border: 1px solid var(--border-color, #444);
+  color: var(--text-color, #eee);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kx-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.kx-similar-card {
+  border: 1px solid var(--border-color, #444);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.kx-similar-card:hover {
+  border-color: var(--accent-color, #7c6cff);
+}
+
+.kx-similar-card img {
+  width: 100%;
+  display: block;
+}
+
+.kx-similar-card .p {
+  padding: 8px;
+  font-size: 12px;
+  color: var(--secondary-text-color, #aaa);
+}
+
+.kx-compare-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card-background, #1e1e2e);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 20001;
+}
+
+.kx-stats {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: var(--card-background, #1e1e2e);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 20002;
+}
+
+.kx-stats table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kx-stats td {
+  padding: 3px 0;
+}
+
+.kx-stats td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+.kx-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 8px;
+  background: var(--background-color, #151520);
+  color: var(--text-color, #eee);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.kx-btn:hover {
+  border-color: var(--accent-color, #7c6cff);
+}
+
+.kx-help {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: var(--card-background, #1e1e2e);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  z-index: 20010;
+  white-space: pre-line;
+  line-height: 1.6;
+}
