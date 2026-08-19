@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses a **fully local** Supabase implementation. No cloud dependencies. Everything runs on your laptop and NAS on the same local network.
+This project uses a **local** Supabase implementation. No cloud dependencies. Everything runs on your local machine(s) on the same network.
 
 ## Infrastructure
 
@@ -10,71 +10,74 @@ This project uses a **fully local** Supabase implementation. No cloud dependenci
 
 | Component | Location | How It Runs |
 |-----------|----------|-------------|
-| **Supabase** | Laptop (`SaulUX.local`) | `npx supabase start` (macOS Login Item) |
-| **Nginx** | NAS | Always running, serves static pages |
-| **OMLX** | NAS | `http://127.0.0.1:8000/v1` |
-| **Static Pages** | NAS | Served via Nginx |
+| **Supabase** | Your machine | `npx supabase start` |
+| **Nginx** (optional) | Same machine or NAS | Serves static pages + proxies API |
+| **OMLX** (optional) | Same machine or NAS | Local OpenAI-compatible LLM |
 
 ### Network Flow
 
 ```
-Browser → NAS (Nginx + static pages)
-         → Laptop (Supabase: http://SaulUX.local:54321)
+Browser → Static pages (Nginx or dev server)
+         → Supabase (npx supabase start)
+         → OMLX (optional, for AI features)
 ```
 
-The browser loads pages from the NAS, then connects directly to the laptop's Supabase instance across the network.
+The browser loads pages, then connects to your local Supabase instance.
 
 ## Setup
 
-### 1. macOS Login Item (Automator Script)
-
-Create a macOS Login Item to start Supabase on boot:
+### 1. Start Supabase
 
 ```bash
-# Create the script
-chmod +x scripts/start-local-supabase.sh
-
-# Add to macOS Login Items
-# System Settings → General → Login Items → + (add the script)
+npx supabase start
 ```
 
-The script:
-- Checks if Supabase is already running
-- Starts Supabase if not running
-- Retries on failure
+This starts the local Supabase instance (default port: `54321`).
 
-### 2. Supabase Configuration
+### 2. Configure the App
 
-The `app/supabase-service.js` uses:
-- **URL**: `http://SaulUX.local:54321` (laptop hostname)
-- **No cloud Supabase** - everything is local
+Either:
+- **Admin page** (`/admin`): enter your Supabase URL and anon key
+- **Environment variables**: copy `.env.example` to `.env` and fill in values
 
-### 3. Browser Connection
+```env
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
 
-The browser connects to the laptop's Supabase instance. The NAS serves static pages. Both machines are on the same local network.
+### 3. Optional: Nginx Proxy
+
+If using Nginx, update `nginx/default.conf` with your Supabase host address.
 
 ## How It Works
 
-1. **Boot**: Laptop starts, Automator script runs `npx supabase start`
-2. **NAS**: Nginx serves static pages, always running
-3. **Browser**: Loads pages from NAS, connects to `http://SaulUX.local:54321`
-4. **Network**: Both machines discover each other on the local network
+1. **Boot**: Run `npx supabase start` to start the database
+2. **App**: Loads and connects to your Supabase instance
+3. **Sync**: Favorites and ratings sync to your local database
+4. **Graceful degradation**: If Supabase is unreachable, the app works in local-only mode
+
+## Supabase Ports
+
+Default ports (configurable in `supabase/config.toml`):
+
+| Service | Port |
+|---------|------|
+| API (PostgREST) | 54321 |
+| Database | 54322 |
+| Studio | 54323 |
+| Auth | 9999 |
 
 ## Troubleshooting
 
 ### Supabase Not Reachable
 
-If Supabase is not running, the banner will guide users to:
-1. Check if Supabase is started
-2. Restart via `npx supabase start`
-3. Verify laptop is on the same network as NAS
+If Supabase is not running, the app will show an offline indicator. To fix:
+1. Run `npx supabase start`
+2. Verify with `npx supabase status`
+3. Check that the URL in Admin settings matches your Supabase instance
 
 ### Common Issues
 
-- **Laptop hostname**: Ensure `SaulUX.local` resolves correctly on the network
-- **Network connectivity**: Verify both machines can reach each other
-- **Supabase status**: Check with `npx supabase status`
-
-## Migration from Cloud
-
-This architecture replaces the cloud Supabase entirely. The previous cloud configuration has been removed. All data syncs happen locally on the laptop.
+- **Port conflict**: Check if another service is using port 54321
+- **Network**: Ensure the browser can reach the Supabase host
+- **Key format**: The anon key should be a valid JWT (3 dot-separated segments, 100+ chars)

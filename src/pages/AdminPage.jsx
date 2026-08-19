@@ -16,9 +16,9 @@ const defaults = {
   supabaseSync: true,
   imageUrlExport: false,
   debugMode: false,
-  supabaseUrl: 'http://SaulUX.local:54321',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MjAyNjAwMDAwMH0.local_key_for_development',
-  aiBaseUrl: 'http://127.0.0.1:8000/v1',
+  supabaseUrl: '',
+  supabaseKey: '',
+  aiBaseUrl: '',
   aiChatModel: 'GLM-4.7-Flash-MLX-4bit',
   aiEmbedModel: 'Qwen3-Embedding-4B-4bit-DWQ',
   aiTimeout: 15000,
@@ -196,7 +196,7 @@ export default function AdminPage() {
         <p class="section-desc">Database URL and anonymous key. Only change if you're using a different Supabase project.</p>
 
         <SettingRow title="Supabase URL" hint="Your Supabase project endpoint">
-          <input type="text" class="text-input" placeholder="http://SaulUX.local:54321"
+          <input type="text" class="text-input" placeholder="http://your-supabase-host:54321"
             value={settings.supabaseUrl} onInput={(e) => update('supabaseUrl', e.target.value)} />
         </SettingRow>
 
@@ -232,7 +232,7 @@ export default function AdminPage() {
         <p class="section-desc">Configure the local OpenAI-compatible LLM used by the Prompt Builder.</p>
 
         <SettingRow title="Provider Base URL" hint="OpenAI-compatible endpoint (e.g. OMLX, Ollama, LM Studio)">
-          <input type="text" class="text-input" placeholder="http://127.0.0.1:8000/v1"
+          <input type="text" class="text-input" placeholder="http://your-llm-host:8000/v1"
             value={settings.aiBaseUrl} onInput={(e) => update('aiBaseUrl', e.target.value)} />
         </SettingRow>
 

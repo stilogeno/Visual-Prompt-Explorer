@@ -2,17 +2,14 @@ window.appSupabase = (function () {
     // ============================================================
     // Local Supabase Configuration
     // ============================================================
-    // Everything runs locally on the laptop:
-    // - Supabase: http://SaulUX.local:54321 (npx supabase start)
-    // - OMLX: http://127.0.0.1:8000/v1 (NAS)
-    // - Static pages: served from NAS via Nginx
-    // - Browser connects to laptop's Supabase across the network
+    // Configure these values via the Admin page or .env file.
+    // Defaults are empty — the app will prompt for configuration.
 
-    let SUPABASE_URL = 'http://SaulUX.local:54321';
-    let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MjAyNjAwMDAwMH0.local_key_for_development';
+    let SUPABASE_URL = '';
+    let SUPABASE_ANON_KEY = '';
 
-    // OMLX (LLM provider) runs locally on the NAS
-    const LOCAL_OMLX_URL = 'http://127.0.0.1:8000/v1';
+    // OMLX (LLM provider) — configure via Admin page
+    const LOCAL_OMLX_URL = '';
 
     // No cloud Supabase - everything runs locally
 
@@ -63,9 +60,9 @@ window.appSupabase = (function () {
             }
         } catch(e) {}
 
-        // Use settings if available, otherwise use defaults
-        const url = settings.supabaseUrl || 'http://SaulUX.local:54321';
-        const key = settings.supabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAwMDAwMDAsImV4cCI6MjAyNjAwMDAwMH0.local_key_for_development';
+        // Use settings if available, otherwise use empty defaults
+        const url = settings.supabaseUrl || '';
+        const key = settings.supabaseKey || '';
 
         console.log('[Supabase] Using Supabase instance:', url);
 

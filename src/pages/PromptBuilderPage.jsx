@@ -48,7 +48,7 @@ const PRESETS = [
 
 function loadAIConfig() {
   const defaults = {
-    baseUrl: 'http://127.0.0.1:8000/v1',
+    baseUrl: '',
     model: 'GLM-4.7-Flash-MLX-4bit',
     embedModel: 'Qwen3-Embedding-4B-4bit-DWQ',
     timeoutMs: 15000,

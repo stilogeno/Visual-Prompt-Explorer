@@ -3,7 +3,7 @@ import { signal } from '@preact/signals';
 // Environment configuration with VITE_ prefix for Vite
 const ENV = {
   // Local Supabase (default)
-  LOCAL_URL: import.meta.env.VITE_SUPABASE_URL || 'http://SaulUX.local:54321',
+  LOCAL_URL: import.meta.env.VITE_SUPABASE_URL || '',
   LOCAL_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   // Cloud fallback
   CLOUD_URL: import.meta.env.VITE_SUPABASE_CLOUD_URL || '',
@@ -50,9 +50,9 @@ function isValidUrl(url) {
     // Allow Supabase cloud domains
     if (hostname.endsWith('.supabase.co')) return true;
     
-    // Allow LAN hostnames (user-configured local instances like SaulUX.local)
+    // Allow LAN hostnames (user-configured local instances)
     // These are typically .local, .lan, or user-defined hostnames
-    if (hostname.endsWith('.local') || hostname.endsWith('.lan') || hostname.includes('Saul')) return true;
+    if (hostname.endsWith('.local') || hostname.endsWith('.lan')) return true;
     
     return false;
   } catch {

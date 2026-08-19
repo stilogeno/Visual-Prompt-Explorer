@@ -100,7 +100,7 @@ Weighted terms render as `(term:weight)` in the prompt output.
 
 ## AI Features (Local OMLX)
 
-The builder can optionally use a local OpenAI-compatible LLM (`http://127.0.0.1:8000/v1`) for:
+The builder can optionally use a local OpenAI-compatible LLM (configured in Admin settings) for:
 
 - **AI Suggest** — semantic search over all 1,596 library prompts using precomputed vectors
 - **AI Enhance** — LLM rewrites your topic into a vivid prompt
