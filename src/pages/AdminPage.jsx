@@ -112,7 +112,7 @@ export default function AdminPage() {
     setConnectionStatus('Testing...');
     setConnectionTime('—');
     try {
-      const res = await fetch(`${settings.supabaseUrl}/rest/v1/pgs?select=count`, {
+      const res = await fetch(`${settings.supabaseUrl}/rest/v1/card_favorite_counts?select=count`, {
         headers: { 'apikey': settings.supabaseKey, 'preference': 'resolveFulfilled' }
       });
       if (res && res.status === 200) {
