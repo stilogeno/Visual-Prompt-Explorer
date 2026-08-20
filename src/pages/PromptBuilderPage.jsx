@@ -176,6 +176,102 @@ function PromptCard({ prompt, onCopy }) {
   );
 }
 
+// AI Integration Functions
+async function callLLM(aiConfig, messages, options = {}) {
+  if (!aiConfig.baseUrl) throw new Error('AI base URL not configured');
+  if (!aiConfig.enabled) throw new Error('AI features disabled');
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), aiConfig.timeoutMs);
+
+  try {
+    const res = await fetch(`${aiConfig.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 500,
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      throw new Error(`LLM error (${res.status}): ${err}`);
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || '';
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') throw new Error('Request timed out');
+    throw e;
+  }
+}
+
+async function aiEnhancePrompt(aiConfig, prompt, context = '') {
+  const systemPrompt = `You are an expert AI prompt engineer for image generation (Stable Diffusion, Midjourney, Flux). 
+Your task is to enhance the given prompt to produce higher quality, more detailed, and more visually compelling results.
+
+Guidelines:
+- Add relevant artistic/technical details (lighting, composition, camera, style modifiers)
+- Keep the core subject intact
+- Use comma-separated format
+- Add quality boosters (e.g., "masterpiece, best quality, ultra detailed")
+- ${aiConfig.nsfw ? 'NSFW content is allowed' : 'Keep all content SFW'}
+- Return ONLY the enhanced prompt, no explanations`;
+
+  const userPrompt = `Enhance this prompt: "${prompt}"
+${context ? `Context: ${context}` : ''}`;
+
+  return callLLM(aiConfig, [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ], { temperature: 0.6, maxTokens: 400 });
+}
+
+async function aiGenerateNewStyle(aiConfig, topic) {
+  const systemPrompt = `You are an expert AI prompt engineer for image generation.
+Generate a complete, high-quality prompt for a new visual style based on the topic.
+
+Guidelines:
+- Create a cohesive style description (medium, lighting, color palette, composition, mood)
+- Use comma-separated format suitable for Stable Diffusion/Midjourney/Flux
+- Include quality modifiers
+- ${aiConfig.nsfw ? 'NSFW content is allowed' : 'Keep all content SFW'}
+- Return ONLY the prompt, no explanations`;
+
+  const userPrompt = `Create a new visual style prompt for: "${topic}"`;
+
+  return callLLM(aiConfig, [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ], { temperature: 0.8, maxTokens: 350 });
+}
+
+async function aiSuggestStyles(aiConfig, subject, environment, mood) {
+  const systemPrompt = `You are an expert in visual styles and art movements.
+Given a subject/environment/mood, suggest 5-8 relevant style keywords that would work well for image generation prompts.
+Return ONLY a comma-separated list of style keywords, no explanations.`;
+
+  const userPrompt = `Subject: ${subject || 'N/A'}
+Environment: ${environment || 'N/A'}
+Mood: ${mood || 'N/A'}
+Suggest relevant style keywords:`;
+
+  return callLLM(aiConfig, [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ], { temperature: 0.5, maxTokens: 200 });
+}
+
 export default function PromptBuilderPage() {
   const [mode, setMode] = useState('quick');
   const [selectedPresets, setSelectedPresets] = useState(new Set());
@@ -184,6 +280,10 @@ export default function PromptBuilderPage() {
   const [generatedPrompts, setGeneratedPrompts] = useState([]);
   const [allStyles] = useState(() => initAllStyles());
   const [aiConfig] = useState(() => loadAIConfig());
+
+  // AI state
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAction, setAiAction] = useState(null);
 
   // Quick mode state
   const [topic, setTopic] = useState('');
@@ -279,6 +379,96 @@ export default function PromptBuilderPage() {
     const top5 = new Set(results.slice(0, 5).map(s => s.id));
     setDetailSelectedStyles(top5);
     showToast(`Found ${results.length} styles — top 5 auto-selected.`);
+  };
+
+  // AI Actions
+  const handleAIEnhance = async (targetPrompt, context = '') => {
+    if (!aiConfig.baseUrl || !aiConfig.enabled) {
+      showToast('Configure AI in Admin page first.');
+      return;
+    }
+    setAiLoading(true);
+    setAiAction('enhance');
+    try {
+      const enhanced = await aiEnhancePrompt(aiConfig, targetPrompt, context);
+      if (mode === 'quick') {
+        setTopic(enhanced);
+      } else {
+        setDetailDetails(enhanced);
+      }
+      showToast('Prompt enhanced!');
+    } catch (e) {
+      showToast('AI Enhance failed: ' + e.message);
+    } finally {
+      setAiLoading(false);
+      setAiAction(null);
+    }
+  };
+
+  const handleAIGenerateStyle = async () => {
+    if (!aiConfig.baseUrl || !aiConfig.enabled) {
+      showToast('Configure AI in Admin page first.');
+      return;
+    }
+    const source = mode === 'quick' ? topic : detailSubject;
+    if (!source) {
+      showToast('Enter a topic/subject first.');
+      return;
+    }
+    setAiLoading(true);
+    setAiAction('generate');
+    try {
+      const newStyle = await aiGenerateNewStyle(aiConfig, source);
+      if (mode === 'quick') {
+        setCustomStyles(prev => [...new Set([...prev, newStyle])]);
+      } else {
+        setDetailStyleSearch(newStyle);
+        const results = searchStyles(allStyles, [newStyle], 20);
+        setDetailStyles(results);
+        const top3 = new Set(results.slice(0, 3).map(s => s.id));
+        setDetailSelectedStyles(top3);
+      }
+      showToast('New style generated!');
+    } catch (e) {
+      showToast('AI Generate failed: ' + e.message);
+    } finally {
+      setAiLoading(false);
+      setAiAction(null);
+    }
+  };
+
+  const handleAISuggestStyles = async () => {
+    if (!aiConfig.baseUrl || !aiConfig.enabled) {
+      showToast('Configure AI in Admin page first.');
+      return;
+    }
+    const subject = mode === 'quick' ? topic : detailSubject;
+    const environment = mode === 'detailed' ? detailEnvironment : '';
+    const mood = mode === 'detailed' ? detailMood : '';
+    if (!subject) {
+      showToast('Enter a subject first.');
+      return;
+    }
+    setAiLoading(true);
+    setAiAction('suggest');
+    try {
+      const suggested = await aiSuggestStyles(aiConfig, subject, environment, mood);
+      const keywords = suggested.split(',').map(s => s.trim()).filter(Boolean);
+      if (mode === 'quick') {
+        setCustomStyles(prev => [...new Set([...prev, ...keywords])]);
+      } else {
+        const results = searchStyles(allStyles, keywords, 20);
+        setDetailStyles(results);
+        const top5 = new Set(results.slice(0, 5).map(s => s.id));
+        setDetailSelectedStyles(top5);
+      }
+      showToast(`Suggested: ${keywords.join(', ')}`);
+    } catch (e) {
+      showToast('AI Suggest failed: ' + e.message);
+    } finally {
+      setAiLoading(false);
+      setAiAction(null);
+    }
   };
 
   // Generate prompts (Quick mode)
@@ -440,7 +630,7 @@ export default function PromptBuilderPage() {
     showToast('JSON downloaded.');
   };
 
-  const aiVisible = aiConfig.enabled;
+  const aiVisible = aiConfig.enabled && aiConfig.baseUrl;
 
   return (
     <div class="builder-container">
@@ -472,6 +662,23 @@ export default function PromptBuilderPage() {
                 <option value="both">Both (Cover + Accompanying)</option>
               </select>
             </div>
+
+            {aiVisible && (
+              <div class="ai-actions" style="margin-top: 12px; padding: 12px; background: var(--background-color); border-radius: 8px;">
+                <p class="section-desc" style="margin-bottom: 8px; font-weight: 600;">AI Assistant</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button class="btn btn-sm" onClick={() => handleAIEnhance(topic)} disabled={!topic || aiLoading}>
+                    {aiAction === 'enhance' ? 'Enhancing...' : '✨ AI Enhance Prompt'}
+                  </button>
+                  <button class="btn btn-sm" onClick={handleAIGenerateStyle} disabled={!topic || aiLoading}>
+                    {aiAction === 'generate' ? 'Generating...' : '🎨 AI Generate Style'}
+                  </button>
+                  <button class="btn btn-sm" onClick={handleAISuggestStyles} disabled={!topic || aiLoading}>
+                    {aiAction === 'suggest' ? 'Suggesting...' : '💡 AI Suggest Styles'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div class="builder-input-section">
@@ -586,6 +793,23 @@ export default function PromptBuilderPage() {
               <textarea class="studio-input studio-textarea" placeholder="e.g., dramatic lighting, shallow depth of field"
                 value={detailDetails} onInput={(e) => setDetailDetails(e.target.value)} />
             </div>
+
+            {aiVisible && (
+              <div class="ai-actions" style="margin-top: 12px; padding: 12px; background: var(--background-color); border-radius: 8px;">
+                <p class="section-desc" style="margin-bottom: 8px; font-weight: 600;">AI Assistant</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button class="btn btn-sm" onClick={() => handleAIEnhance(detailDetails, `Subject: ${detailSubject}, Environment: ${detailEnvironment}, Mood: ${detailMood}`)} disabled={!detailDetails || aiLoading}>
+                    {aiAction === 'enhance' ? 'Enhancing...' : '✨ AI Enhance Details'}
+                  </button>
+                  <button class="btn btn-sm" onClick={handleAIGenerateStyle} disabled={!detailSubject || aiLoading}>
+                    {aiAction === 'generate' ? 'Generating...' : '🎨 AI Generate Style'}
+                  </button>
+                  <button class="btn btn-sm" onClick={handleAISuggestStyles} disabled={!detailSubject || aiLoading}>
+                    {aiAction === 'suggest' ? 'Suggesting...' : '💡 AI Suggest Styles'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div class="weight-control">
               <label>Subject emphasis</label>
