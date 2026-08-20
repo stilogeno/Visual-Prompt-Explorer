@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import {
-  currentView, favorites, searchTerm, randomSort,
+  currentView, searchTerm, randomSort,
   allItems, showToast, buildCopyText
 } from '../store/styleStore';
 import { copyToClipboard, getImagePath } from '../lib/utils';
@@ -108,24 +108,6 @@ function MoodboardModal({ onClose }) {
   );
 }
 
-function StatsPanel({ onClose }) {
-  const favs = favorites.value;
-  const counts = { '1★': 0, '2★': 0, '3★': 0, '4★': 0, '5★': 0 };
-  favs.forEach(r => { if (counts[r + '★'] !== undefined) counts[r + '★']++; });
-
-  return (
-    <div class="kx-stats">
-      <div style="font-weight: 700; margin-bottom: 8px;">My Stats</div>
-      <table>
-        <tr><td>Total styles</td><td>{allItems.value.length}</td></tr>
-        <tr><td>My favorites</td><td>{favs.size}</td></tr>
-        {Object.entries(counts).map(([k, v]) => <tr key={k}><td>{k}</td><td>{v}</td></tr>)}
-      </table>
-      <button class="kx-btn" style="margin-top: 10px;" onClick={onClose}>Close</button>
-    </div>
-  );
-}
-
 function HelpPanel({ onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 8000);
@@ -146,7 +128,6 @@ export default function Enhancements() {
   const [compareIds, setCompareIds] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [showMoodboards, setShowMoodboards] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [compareBarVisible, setCompareBarVisible] = useState(false);
 
@@ -192,7 +173,6 @@ export default function Enhancements() {
           }
           break;
         case 'm': setShowMoodboards(true); break;
-        case 'v': setShowStats(true); break;
         case '?': setShowHelp(h => !h); break;
       }
     };
@@ -212,7 +192,6 @@ export default function Enhancements() {
       },
       openCompareModal: () => setShowCompare(true),
       openMoodboards: () => setShowMoodboards(true),
-      showStats: () => setShowStats(true),
     };
   }, []);
 
@@ -221,7 +200,6 @@ export default function Enhancements() {
       {similarId && <SimilarStylesModal id={similarId} onClose={() => setSimilarId(null)} />}
       {showCompare && <CompareModal ids={compareIds} onClose={() => { setShowCompare(false); setCompareIds([]); setCompareBarVisible(false); }} />}
       {showMoodboards && <MoodboardModal onClose={() => setShowMoodboards(false)} />}
-      {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {compareBarVisible && compareIds.length > 0 && (
         <div class="kx-compare-bar">

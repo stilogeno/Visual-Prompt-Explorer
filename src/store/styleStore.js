@@ -15,8 +15,6 @@ export const selectedStarFilters = signal(new Set([5, 4, 3, 2, 1, 0]));
 export const randomSort = signal(false);
 export const activeBasePromptId = signal('');
 export const gridCols = signal(5);
-export const isFoldersPanelVisible = signal(false);
-export const activeFolderId = signal('unsorted');
 export const selectedArtistIds = signal(new Set());
 export const categoryFilter = signal('');
 export const sortOrder = signal('original');
@@ -29,10 +27,6 @@ export const styleLibraryBasePrompts = signal([]);
 export const styleLibraryManifestImages = signal({});
 export const activeStyleBasePromptId = signal('');
 export const sourceFilter = signal('all'); // 'all', 'gallery', 'style'
-
-// Folders
-export const folders = signal([]);
-export const folderArtists = signal(new Map());
 
 // Toast
 export const toastMessage = signal('');
@@ -53,7 +47,7 @@ export const adminSettings = signal(loadAdminSettings());
 function loadAdminSettings() {
   const defaults = {
     itemsPerPage: 20, sortOrder: 'desc', scrollThreshold: 200,
-    gridCols: 5, foldersVisible: true, toastDuration: 2000,
+    gridCols: 5, toastDuration: 2000,
     scrollTopThreshold: 300, supabaseSync: false, imageUrlExport: false,
     debugMode: false,
   };
@@ -98,12 +92,6 @@ export async function initStore() {
 
   const favs = await db.loadFavorites();
   favorites.value = favs;
-
-  const fls = await db.loadFolders();
-  folders.value = fls;
-
-  const fa = await db.loadFolderArtists();
-  folderArtists.value = fa;
 
   // Load gallery data
   if (typeof window.galleryData !== 'undefined' && allItems.value.length === 0) {
@@ -257,8 +245,6 @@ export const filteredItems = computed(() => {
   const view = currentView.value;
   const random = randomSort.value;
   const baseId = activeBasePromptId.value;
-  const afId = activeFolderId.value;
-  const faMap = folderArtists.value;
   const catFilter = categoryFilter.value;
   const sort = sortOrder.value;
   const srcFilter = sourceFilter.value;
@@ -303,39 +289,6 @@ export const filteredItems = computed(() => {
     items = items.filter(item => (item.categories || []).includes(catFilter));
   }
 
-  // Favorites view
-  if (view === 'favorites') {
-    items = items.filter(item => {
-      const r = favs.get(item.id) || 0;
-      return r > 0;
-    });
-
-    // Folder filter (desktop)
-    if (window.innerWidth > 992 && afId) {
-      let artistIdsForFolder;
-      if (afId === 'unsorted') {
-        const allCategorized = new Set();
-        for (const ids of faMap.values()) {
-          ids.forEach(i => allCategorized.add(i.id));
-        }
-        artistIdsForFolder = Array.from(favs.keys()).filter(id => !allCategorized.has(id));
-      } else {
-        const entries = faMap.get(afId) || [];
-        artistIdsForFolder = entries.sort((a, b) => b.added - a.added).map(i => i.id);
-      }
-      const idSet = new Set(artistIdsForFolder);
-      items = items.filter(item => idSet.has(item.id));
-
-      // Sort by folder order
-      if (afId !== 'unsorted') {
-        const orderMap = new Map(artistIdsForFolder.map((id, i) => [id, i]));
-        items.sort((a, b) => (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity));
-      }
-    } else {
-      items.sort((a, b) => (favs.get(b.id) || 0) - (favs.get(a.id) || 0));
-    }
-  }
-
   // Search filter
   if (search) {
     const lower = search.toLowerCase();
@@ -378,66 +331,6 @@ export const allCategories = computed(() => {
   return [...cats].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 });
 
-// Folder actions
-export async function createFolder(name) {
-  const folder = { id: `folder-${Date.now()}`, name: name.trim(), lastArtistId: null };
-  const next = [...folders.value, folder].sort((a, b) => a.name.localeCompare(b.name));
-  folders.value = next;
-  await db.saveFolder(folder);
-}
-
-export async function removeFolder(folderId) {
-  folders.value = folders.value.filter(f => f.id !== folderId);
-  folderArtists.value.delete(folderId);
-  await db.deleteFolder(folderId);
-}
-
-export async function moveArtistToFolder(folderId, artistIds) {
-  const fa = new Map(folderArtists.value);
-  const current = fa.get(folderId) || [];
-  const toAdd = artistIds.filter(id => !current.some(i => i.id === id));
-  if (toAdd.length === 0) return;
-
-  // Remove from previous folders
-  for (const [fId, entries] of fa.entries()) {
-    const filtered = entries.filter(i => !artistIds.includes(i.id));
-    if (filtered.length !== entries.length) {
-      fa.set(fId, filtered);
-      if (filtered.length === 0) {
-        await db.removeFolderArtists(fId);
-      } else {
-        await db.saveFolderArtists(fId, filtered);
-      }
-    }
-  }
-
-  const updated = [...current, ...toAdd.map(id => ({ id, added: Date.now() }))];
-  fa.set(folderId, updated);
-  folderArtists.value = fa;
-  await db.saveFolderArtists(folderId, updated);
-}
-
-export function getUnsortedArtistIds() {
-  const favs = favorites.value;
-  const fa = folderArtists.value;
-  const allCategorized = new Set();
-  for (const ids of fa.values()) {
-    ids.forEach(i => allCategorized.add(i.id));
-  }
-  return Array.from(favs.keys()).filter(id => !allCategorized.has(id));
-}
-
-export function getArtistIdsInFolder(folderId) {
-  const entries = folderArtists.value.get(folderId) || [];
-  return entries.sort((a, b) => b.added - a.added).map(i => i.id);
-}
-
-export function getFolderName(folderId) {
-  if (folderId === 'unsorted') return 'Unsorted';
-  const f = folders.value.find(f => f.id === folderId);
-  return f ? f.name : '';
-}
-
 export function buildCopyText(item) {
   const styleText = item.descriptor || item.artist || '';
   const bp = BASE_PROMPTS.find(p => p.id === activeBasePromptId.value);
@@ -462,10 +355,6 @@ export function exportFavoritesJSON() {
   const exportData = {
     metadata: { appName: 'Visual Prompt Explorer', exportDate: new Date().toISOString(), favoritesCount: items.length },
     favorites: items,
-    folderData: {
-      folders: folders.value,
-      folderArtists: Object.fromEntries(folderArtists.value.entries()),
-    },
   };
 
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -482,17 +371,7 @@ export function exportFavoritesTXT() {
   const favs = favorites.value;
   if (favs.size === 0) { showToast('No favorites to export.'); return; }
 
-  let ids = Array.from(favs.keys()).sort((a, b) => (favs.get(b) || 0) - (favs.get(a) || 0));
-
-  // Filter by active folder if on desktop
-  if (window.innerWidth > 992) {
-    const afId = activeFolderId.value;
-    if (afId === 'unsorted') {
-      ids = getUnsortedArtistIds();
-    } else if (afId) {
-      ids = getArtistIdsInFolder(afId);
-    }
-  }
+  const ids = Array.from(favs.keys()).sort((a, b) => (favs.get(b) || 0) - (favs.get(a) || 0));
 
   const lines = ids.map(id => {
     const item = allItems.value.find(i => i.id === id);

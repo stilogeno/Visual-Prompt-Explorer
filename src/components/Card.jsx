@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { displayRatingFor, setRating, removeFavorite, currentView, selectedArtistIds, showToast, showCardDetails } from '../store/styleStore';
+import { displayRatingFor, setRating, showToast, showCardDetails } from '../store/styleStore';
 import { copyToClipboard } from '../lib/utils';
 import './Card.css';
 
@@ -13,9 +13,7 @@ const StarSVG = ({ filled }) => (
 
 export default function Card({ item }) {
   const [flashing, setFlashing] = useState(false);
-  const view = currentView.value;
   const rating = displayRatingFor(item);
-  const isSelected = selectedArtistIds.value.has(item.id);
 
   const triggerFlash = () => {
     setFlashing(true);
@@ -24,7 +22,7 @@ export default function Card({ item }) {
 
   const handleClick = (e) => {
     const starEl = e.target.closest('.star');
-    if (starEl && view !== 'favorites') {
+    if (starEl) {
       e.stopPropagation();
       const newRating = parseInt(starEl.dataset.star);
       setRating(item.id, newRating === rating ? 0 : newRating);
@@ -32,24 +30,8 @@ export default function Card({ item }) {
     }
 
     if (e.target.closest('.card-copy-btn')) return;
-    if (e.target.classList.contains('favorite-button')) return;
 
-    if (view === 'favorites' && e.ctrlKey) {
-      e.preventDefault();
-      const next = new Set(selectedArtistIds.value);
-      if (next.has(item.id)) next.delete(item.id);
-      else next.add(item.id);
-      selectedArtistIds.value = next;
-    } else if (view === 'favorites') {
-      return;
-    } else {
-      window.dispatchEvent(new CustomEvent('viewer-open', { detail: { id: item.id } }));
-    }
-  };
-
-  const handleRemove = (e) => {
-    e.stopPropagation();
-    removeFavorite(item.id);
+    window.dispatchEvent(new CustomEvent('viewer-open', { detail: { id: item.id } }));
   };
 
   const handleCopy = (e) => {
@@ -70,10 +52,9 @@ export default function Card({ item }) {
 
   return (
     <div
-      class={`card ${isSelected ? 'selected' : ''} ${flashing ? 'flash' : ''}`}
+      class={`card ${flashing ? 'flash' : ''}`}
       data-id={item.id}
       data-artist={item.artist}
-      draggable={view === 'favorites'}
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -84,27 +65,23 @@ export default function Card({ item }) {
         <span class="card__source-badge">Style</span>
       )}
 
-      {view === 'favorites' ? (
-        <button class="favorite-button remove-favorite" onClick={handleRemove} title="Remove rating" aria-label="Remove rating">×</button>
-      ) : (
-        <div class="star-rating-container" role="toolbar" aria-label="Rating controls">
-          {[1, 2, 3, 4, 5].map(i => (
-            <span
-              key={i}
-              class="star"
-              data-star={i}
-              title={`${i} star${i > 1 ? 's' : ''}`}
-              role="button"
-              tabIndex="0"
-              aria-label={`Rate ${i} star${i > 1 ? 's' : ''}`}
-              aria-pressed={i <= rating}
-              onKeyDown={(e) => handleStarKey(e, i)}
-            >
-              <StarSVG filled={i <= rating} />
-            </span>
-          ))}
-        </div>
-      )}
+      <div class="star-rating-container" role="toolbar" aria-label="Rating controls">
+        {[1, 2, 3, 4, 5].map(i => (
+          <span
+            key={i}
+            class="star"
+            data-star={i}
+            title={`${i} star${i > 1 ? 's' : ''}`}
+            role="button"
+            tabIndex="0"
+            aria-label={`Rate ${i} star${i > 1 ? 's' : ''}`}
+            aria-pressed={i <= rating}
+            onKeyDown={(e) => handleStarKey(e, i)}
+          >
+            <StarSVG filled={i <= rating} />
+          </span>
+        ))}
+      </div>
 
       {showCardDetails.value && (
         <div class="card__info">

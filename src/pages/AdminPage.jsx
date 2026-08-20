@@ -276,17 +276,9 @@ export default function AdminPage() {
       {/* Data Management */}
       <div class="admin-section">
         <h2>Data Management</h2>
-        <p class="section-desc">View and manage your local IndexedDB storage.</p>
+        <p class="section-desc">Manage your local IndexedDB storage (ratings, settings, user ID).</p>
 
         <div class="db-stats">
-          <div class="db-stat-card">
-            <div class="stat-value" id="stat-favorites">—</div>
-            <div class="stat-label">Favorites</div>
-          </div>
-          <div class="db-stat-card">
-            <div class="stat-value" id="stat-folders">—</div>
-            <div class="stat-label">Folders</div>
-          </div>
           <div class="db-stat-card">
             <div class="stat-value">{getUserId()}</div>
             <div class="stat-label">User ID</div>
@@ -294,18 +286,6 @@ export default function AdminPage() {
         </div>
 
         <div class="admin-actions">
-          <button class="btn" onClick={() => {
-            const idb = indexedDB.open('StyleGalleryKrea', 5);
-            idb.onsuccess = (e) => {
-              const db = e.target.result;
-              db.transaction('favorites', 'readonly').objectStore('favorites').count().onsuccess = (ev) => {
-                document.getElementById('stat-favorites').textContent = ev.target.result.toLocaleString();
-              };
-              db.transaction('folders', 'readonly').objectStore('folders').count().onsuccess = (ev) => {
-                document.getElementById('stat-folders').textContent = ev.target.result;
-              };
-            };
-          }}>Refresh Stats</button>
           <button class="btn btn-danger" onClick={() => setShowResetConfirm(true)}>Reset All Data</button>
           <button class="btn btn-primary" onClick={handleSave}>Save Settings & Reload</button>
         </div>
@@ -316,7 +296,7 @@ export default function AdminPage() {
         <div class="confirm-overlay show" onClick={(e) => { if (e.target === e.currentTarget) setShowResetConfirm(false); }}>
           <div class="confirm-dialog">
             <h3>Reset All Data?</h3>
-            <p>This will permanently delete all favorites, folders, and settings. This cannot be undone. Your gallery styles and images are not affected.</p>
+            <p>This will permanently delete all ratings, folders, and settings. This cannot be undone. Your gallery styles and images are not affected.</p>
             <div class="confirm-actions">
               <button class="btn" onClick={() => setShowResetConfirm(false)}>Cancel</button>
               <button class="btn btn-danger" onClick={handleReset}>Delete Everything</button>

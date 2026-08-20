@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { filteredItems, favorites, showToast, builderPrefill } from '../store/styleStore';
+import { filteredItems, showToast, builderPrefill } from '../store/styleStore';
 import { copyToClipboard } from '../lib/utils';
 import { route } from 'preact-router';
 import './ViewerModal.css';
@@ -118,7 +118,6 @@ export default function ViewerModal({ isOpen, onClose, startId, items: itemsProp
       <div class="viewer-header">
         <div class="viewer-header-left">
           <span class="viewer-counter">{currentIndex + 1} / {activeList.length}</span>
-          <span class="viewer-fav-count">♥ {favorites.value.size}</span>
         </div>
         <button class="viewer-close" onClick={onClose}>×</button>
       </div>
