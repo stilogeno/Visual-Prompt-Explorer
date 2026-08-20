@@ -26,11 +26,24 @@ const defaults = {
   aiNsfw: false,
 };
 
-function Toggle({ checked, onChange }) {
+function Toggle({ checked, onChange, disabled = false }) {
   return (
-    <label class="toggle-switch">
-      <input type="checkbox" checked={checked} onChange={onChange} />
-      <span class="toggle-slider"></span>
+    <label class="toggle-switch" title={checked ? 'Enabled' : 'Disabled'}>
+      <input
+        type="checkbox"
+        role="switch"
+        aria-checked={checked}
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        class="toggle-input"
+      />
+      <span class="toggle-track" aria-hidden="true">
+        <span class="toggle-thumb"></span>
+      </span>
+      <span class="toggle-label" aria-hidden="true">
+        {checked ? 'On' : 'Off'}
+      </span>
     </label>
   );
 }

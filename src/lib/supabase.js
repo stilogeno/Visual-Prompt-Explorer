@@ -14,7 +14,7 @@ const ENV = {
 };
 
 let client = null;
-let connectionStatus = signal<'local' | 'cloud' | 'offline'>('offline');
+let connectionStatus = signal('offline');
 
 export { connectionStatus };
 
